@@ -1,5 +1,4 @@
 <?php
-
 namespace App\Http\Controllers;
 
 use App\Models\Departement;
@@ -11,10 +10,23 @@ class DepartementController extends Controller
     /**
      * Liste des départements
      */
-   public function index()
+    public function index()
     {
-        $departements = Departement::all();
-        $etablissements = Etablissement::all(); // <- Il faut cette ligne
+        $user = auth()->user();
+
+        if (in_array($user->type, ['Admin', 'President'])) {
+            $departements = Departement::with('etablissement')->get();
+            $etablissements = Etablissement::all();
+        } elseif (in_array($user->type, ['DA', 'CS'])) {
+            $departements = Departement::where('etablissement_id', $user->etablissement_id)
+                ->with('etablissement')
+                ->get();
+
+            $etablissements = Etablissement::where('id', $user->etablissement_id)->get();
+        } else {
+            $departements = collect();
+            $etablissements = collect();
+        }
 
         return view('departements.index', compact('departements', 'etablissements'));
     }
@@ -24,6 +36,10 @@ class DepartementController extends Controller
      */
     public function create()
     {
+        if (!in_array(auth()->user()->type, ['Admin', 'President'])) {
+            abort(403, 'Accès interdit');
+        }
+
         $etablissements = Etablissement::orderBy('libelle')->get();
 
         return view('departements.create', compact('etablissements'));
@@ -34,11 +50,15 @@ class DepartementController extends Controller
      */
     public function store(Request $request)
     {
+        if (!in_array(auth()->user()->type, ['Admin', 'President'])) {
+            abort(403);
+        }
+
         $request->validate([
-            'code'            => 'required|string|max:50|unique:departements,code',
-            'libelle'         => 'required|string|max:255',
-            'sigle'           => 'required|string|max:50',
-            'etablissement_id'=> 'required|exists:etablissements,id',
+            'code'             => 'required|string|max:50|unique:departements,code',
+            'libelle'          => 'required|string|max:255',
+            'sigle'            => 'required|string|max:50',
+            'etablissement_id' => 'required|exists:etablissements,id',
         ]);
 
         Departement::create($request->all());
@@ -53,6 +73,15 @@ class DepartementController extends Controller
      */
     public function show(Departement $departement)
     {
+        $user = auth()->user();
+
+        if (
+            in_array($user->type, ['DA', 'CS']) &&
+            $departement->etablissement_id !== $user->etablissement_id
+        ) {
+            abort(403);
+        }
+
         $departement->load('etablissement');
 
         return view('departements.show', compact('departement'));
@@ -63,6 +92,10 @@ class DepartementController extends Controller
      */
     public function edit(Departement $departement)
     {
+        if (!in_array(auth()->user()->type, ['Admin', 'President'])) {
+            abort(403);
+        }
+
         $etablissements = Etablissement::orderBy('libelle')->get();
 
         return view('departements.edit', compact('departement', 'etablissements'));
@@ -73,11 +106,15 @@ class DepartementController extends Controller
      */
     public function update(Request $request, Departement $departement)
     {
+        if (!in_array(auth()->user()->type, ['Admin', 'President'])) {
+            abort(403);
+        }
+
         $request->validate([
-            'code'            => 'required|string|max:55|unique:departements,code,' . $departement->id,
-            'libelle'         => 'required|string|max:255',
-            'sigle'           => 'required|string|max:50',
-            'etablissement_id'=> 'required|exists:etablissements,id',
+            'code'             => 'required|string|max:55|unique:departements,code,' . $departement->id,
+            'libelle'          => 'required|string|max:255',
+            'sigle'            => 'required|string|max:50',
+            'etablissement_id' => 'required|exists:etablissements,id',
         ]);
 
         $departement->update($request->all());
@@ -92,6 +129,10 @@ class DepartementController extends Controller
      */
     public function destroy(Departement $departement)
     {
+        if (!in_array(auth()->user()->type, ['Admin', 'President'])) {
+            abort(403);
+        }
+
         $departement->delete();
 
         return redirect()
@@ -99,4 +140,3 @@ class DepartementController extends Controller
             ->with('success', 'Département supprimé avec succès');
     }
 }
-

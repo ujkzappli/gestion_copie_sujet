@@ -13,13 +13,36 @@ class OptionController extends Controller
      * Liste des options
      */
     public function index()
-    {
-        $options = Option::with(['departement.etablissement', 'semestre'])
-            ->orderBy('libelle_option')
-            ->get();
+{
+    $user = auth()->user();
 
-        return view('options.index', compact('options'));
+    $query = Option::with(['departement.etablissement', 'semestre']);
+
+    // 🔐 DA : uniquement son établissement
+    if ($user->type === 'DA') {
+        $query->whereHas('departement', function ($q) use ($user) {
+            $q->where('etablissement_id', $user->etablissement_id);
+        });
     }
+
+    // 🔐 CD : uniquement son département
+    if ($user->type === 'CD') {
+        $query->where('departement_id', $user->departement_id);
+    }
+
+    // 🔐 CS : uniquement son établissement
+    if ($user->type === 'CS') {
+        $query->whereHas('departement', function ($q) use ($user) {
+            $q->where('etablissement_id', $user->etablissement_id);
+        });
+    }
+
+    // Admin & Président → pas de restriction
+    $options = $query->get();
+
+    return view('options.index', compact('options'));
+}
+
 
     /**
      * Formulaire de création

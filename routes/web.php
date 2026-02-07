@@ -11,6 +11,7 @@ use App\Http\Controllers\ModuleController;
 use App\Http\Controllers\LotCopieController;
 use App\Http\Controllers\AdminUserController;
 use App\Http\Controllers\Auth\LoginController;
+use App\Http\Controllers\DA\DashboardController;
 
 /*
 |--------------------------------------------------------------------------
@@ -18,7 +19,7 @@ use App\Http\Controllers\Auth\LoginController;
 |--------------------------------------------------------------------------
 */
 Route::get('/', function () {
-    return redirect()->route('login.form');
+    return redirect()->route('login');
 });
 
 /*
@@ -69,6 +70,11 @@ Route::middleware('auth')->group(function () {
         ->name('profile.delete');
 
 });
+
+// dashboard DA
+
+Route::middleware('auth')->get('/dashboard', [DashboardController::class, 'index'])
+    ->name('dashboard');
 
 /* route qui gère auto index, create, store, show, edit update, destroy en meme temps 
 avec les methodes GET, POST PUT/PATCH etc concerné en fonction de chaque action (index, sotre ...)

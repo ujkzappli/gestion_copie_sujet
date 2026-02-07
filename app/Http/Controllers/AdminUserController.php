@@ -2,92 +2,68 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Models\Etablissement;
+use App\Models\Departement;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Mail;
 use App\Mail\NewUserMail;
 
 class AdminUserController extends Controller
 {
-    public function __construct()
+     public function index()
     {
-        // Middleware anonyme pour vérifier si l'utilisateur est Admin
-        $this->middleware(function ($request, $next) {
-            $user = $request->user(); // <-- mieux que auth()->user()
-            if (!$user || $user->type !== 'Admin') {
-                abort(403, 'Accès interdit');
-            }
-            return $next($request);
-        });
-    }
-    public function index()
-    {
-        $users = User::orderBy('id', 'desc')->paginate(10);
+        $users = User::with(['etablissement', 'departement'])->get(); // charger relations
+
         return view('admin.users.index', compact('users'));
     }
 
+    // Formulaire création utilisateur
     public function create()
     {
-        return view('admin.users.create');
+        $etablissements = Etablissement::all();
+        $departements = Departement::all();
+        return view('admin.users.create', compact('etablissements', 'departements'));
     }
 
+    // Création utilisateur
     public function store(Request $request)
     {
+        // Validation des champs
         $request->validate([
             'nom_utilisateur' => 'required|string|max:255',
             'prenom_utilisateur' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email',
-            'matricule_utilisateur' => 'required|string|unique:users,matricule_utilisateur',
+            'matricule_utilisateur' => 'required|unique:users,matricule_utilisateur',
             'type' => 'required|in:Admin,President,Enseignant,CD,CS,DA',
+            'etablissement_id' => 'nullable|required_if:type,DA,CS,CD',
+            'departement_id' => 'nullable|required_if:type,CD,Enseignant',
         ]);
 
-        $temporaryPassword = Str::random(8);
+        // Génération d'un mot de passe aléatoire
+        $password = Str::random(8);
 
+        // Création de l'utilisateur
         $user = User::create([
             'nom_utilisateur' => $request->nom_utilisateur,
             'prenom_utilisateur' => $request->prenom_utilisateur,
             'email' => $request->email,
             'matricule_utilisateur' => $request->matricule_utilisateur,
-            'password' => Hash::make($temporaryPassword),
             'type' => $request->type,
-            'must_change_password' => true,
+            'etablissement_id' => $request->etablissement_id,
+            'departement_id' => $request->departement_id,
+            'password' => Hash::make($password),
         ]);
 
-        Mail::to($user->email)->send(new NewUserMail($user, $temporaryPassword));
+        // Envoi du mail avec les infos de connexion
+        Mail::to($user->email)->send(new NewUserMail($user, $password));
 
-        return redirect()->route('admin.users.index')->with('success', 'Utilisateur créé et email envoyé !');
+        return redirect()->route('admin.users.index')
+                         ->with('success', 'Utilisateur créé avec succès et mail envoyé.');
     }
 
-    public function show(User $user)
-    {
-        return view('admin.users.show', compact('user'));
-    }
-
-    public function edit(User $user)
-    {
-        return view('admin.users.edit', compact('user'));
-    }
-
-    public function update(Request $request, User $user)
-    {
-        $request->validate([
-            'nom_utilisateur' => 'required|string|max:255',
-            'prenom_utilisateur' => 'required|string|max:255',
-            'email' => 'required|email|unique:users,email,' . $user->id,
-            'matricule_utilisateur' => 'required|string|unique:users,matricule_utilisateur,' . $user->id,
-            'type' => 'required|in:Admin,President,Enseignant,CD,CS,DA',
-        ]);
-
-        $user->update($request->all());
-
-        return redirect()->route('admin.users.index')->with('success', 'Utilisateur mis à jour !');
-    }
-
-    public function destroy(User $user)
-    {
-        $user->delete();
-        return redirect()->route('admin.users.index')->with('success', 'Utilisateur supprimé !');
-    }
+    // Index, edit, update, destroy peuvent être ajoutés ici
 }

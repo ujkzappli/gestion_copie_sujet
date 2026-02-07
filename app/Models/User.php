@@ -48,4 +48,55 @@ class User extends Authenticatable
         return null;
     }
 
+    public function etablissement()
+    {
+        return $this->belongsTo(Etablissement::class);
+    }
+
+    public function departement()
+    {
+        return $this->belongsTo(Departement::class);
+    }
+
+    public function departementsEnseignes()
+    {
+        return $this->belongsToMany(
+            Departement::class,
+            'enseignant_departement',
+            'utilisateur_id',
+            'departement_id'
+        );
+    }
+
+    public function lotsCopies()
+    {
+        return $this->hasMany(LotCopie::class, 'utilisateur_id');
+    }
+
+    public function scopeEnseignantsForUser($query, User $user)
+    {
+        if ($user->type === 'Admin') {
+            return $query->where('type', 'Enseignant');
+        }
+
+        if (in_array($user->type, ['DA', 'CS'])) {
+            return $query
+                ->where('type', 'Enseignant')
+                ->whereHas('departementsEnseignes', function ($q) use ($user) {
+                    $q->where('etablissement_id', $user->etablissement_id);
+                });
+        }
+
+        if ($user->type === 'CD') {
+            return $query
+                ->where('type', 'Enseignant')
+                ->whereHas('departementsEnseignes', function ($q) use ($user) {
+                    $q->where('departement_id', $user->departement_id);
+                });
+        }
+
+        return $query->whereNull('id');
+    }
+
+
 }

@@ -9,21 +9,45 @@ class EtablissementController extends Controller
 {
      // Afficher la liste des établissements
     public function index()
-    {
-        $etablissements = Etablissement::orderBy('libelle')->get();
+{
+    $user = auth()->user();
 
-        return view('etablissements.index', compact('etablissements'));
+    // Admin & Président → tout
+    if (in_array($user->type, ['Admin', 'President'])) {
+        $etablissements = Etablissement::all();
     }
+
+    // DA & CS → uniquement leur établissement
+    elseif (in_array($user->type, ['DA', 'CS'])) {
+        $etablissements = Etablissement::where('id', $user->etablissement_id)->get();
+    }
+
+    // Autres rôles → rien
+    else {
+        $etablissements = collect();
+    }
+
+    return view('etablissements.index', compact('etablissements'));
+}
+
 
     // Afficher le formulaire de création
     public function create()
     {
+        if (!in_array(auth()->user()->type, ['Admin', 'President'])) {
+            abort(403, 'Accès interdit');
+        }
+
         return view('etablissements.create');
     }
 
    // Enregistrer un nouvel établissement
     public function store(Request $request)
     {
+
+        if (!in_array(auth()->user()->type, ['Admin', 'President'])) {
+            abort(403);
+        }
         $request->validate([
             'sigle'   => 'required|string|max:255|unique:etablissements,sigle',
             'libelle' => 'required|string|max:255',

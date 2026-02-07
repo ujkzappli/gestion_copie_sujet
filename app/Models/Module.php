@@ -16,8 +16,7 @@ class Module extends Model
         'enseignant_id',
     ];
 
-    /* ================= RELATIONS ================= */
-
+    // Relations
     public function semestre()
     {
         return $this->belongsTo(Semestre::class);
@@ -26,6 +25,20 @@ class Module extends Model
     public function enseignant()
     {
         return $this->belongsTo(User::class, 'enseignant_id');
+    }
+
+    // Relation calculée vers département
+    public function departement()
+    {
+        return $this->enseignant ? $this->enseignant->departement : null;
+    }
+
+    // Relation calculée vers établissement
+    public function etablissement()
+    {
+        return $this->enseignant && $this->enseignant->departement
+            ? $this->enseignant->departement->etablissement
+            : null;
     }
 
     public function lotCopies()

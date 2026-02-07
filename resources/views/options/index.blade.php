@@ -1,26 +1,32 @@
 @extends('layouts.app')
 
+@section('title', 'Gestion des options')
+
 @section('content')
 <div class="container-fluid">
+
+    {{-- Titre + bouton --}}
     <div class="d-flex justify-content-between align-items-center mb-3">
         <h4 class="mb-0">Liste des options</h4>
         <a href="{{ route('options.create') }}" class="btn btn-primary">
-            <i class="bi bi-plus-lg"></i> Nouvelle option
+            <i class="bi bi-plus-circle"></i> Nouvelle option
         </a>
     </div>
 
+    {{-- Message succès --}}
     @if(session('success'))
         <div class="alert alert-success">
             {{ session('success') }}
         </div>
     @endif
 
+    {{-- Tableau --}}
     <div class="card shadow-sm">
         <div class="card-body">
-            <table class="table table-bordered table-hover align-middle">
+            <table id="optionsTable" class="table table-bordered table-hover align-middle">
                 <thead class="table-light">
                     <tr>
-                        <th>#</th>
+                        <th>ID</th>
                         <th>Code</th>
                         <th>Libellé</th>
                         <th>Département</th>
@@ -32,40 +38,47 @@
                 <tbody>
                     @forelse($options as $option)
                         <tr>
-                            <td>{{ $loop->iteration }}</td>
-                            <td>{{ $option->code }}</td>
-                            <td>{{ $option->libelle_option }}</td>
+                            <td>{{ $option->id }}</td>
+
                             <td>
                                 <span class="badge bg-secondary">
+                                    {{ $option->code }}
+                                </span>
+                            </td>
+
+                            <td>{{ $option->libelle_option }}</td>
+
+                            <td>
+                                <span class="badge bg-dark">
                                     {{ $option->departement->sigle }}
                                 </span>
                             </td>
+
                             <td>
                                 <span class="badge bg-info">
                                     {{ $option->departement->etablissement->sigle }}
                                 </span>
                             </td>
+
                             <td>
                                 <span class="badge bg-success">
                                     {{ $option->semestre->libelle }}
                                 </span>
                             </td>
+
                             <td class="text-center">
-                                <!-- Voir -->
                                 <a href="{{ route('options.show', $option) }}"
                                    class="btn btn-sm btn-outline-info"
                                    title="Voir">
                                     <i class="bi bi-eye-fill"></i>
                                 </a>
 
-                                <!-- Modifier -->
                                 <a href="{{ route('options.edit', $option) }}"
                                    class="btn btn-sm btn-outline-warning"
                                    title="Modifier">
                                     <i class="bi bi-pencil-square"></i>
                                 </a>
 
-                                <!-- Supprimer -->
                                 <form action="{{ route('options.destroy', $option) }}"
                                       method="POST"
                                       class="d-inline"
@@ -91,5 +104,29 @@
             </table>
         </div>
     </div>
+
 </div>
 @endsection
+
+@push('scripts')
+<script>
+$(document).ready(function () {
+    $('#optionsTable').DataTable({
+        responsive: false,
+        pageLength: 25,
+        order: [[0, 'asc']],
+        language: {
+            search: "Recherche :",
+            lengthMenu: "Afficher _MENU_ entrées",
+            info: "Affichage de _START_ à _END_ sur _TOTAL_ entrées",
+            paginate: {
+                first: "Premier",
+                last: "Dernier",
+                next: "Suivant",
+                previous: "Précédent"
+            }
+        }
+    });
+});
+</script>
+@endpush

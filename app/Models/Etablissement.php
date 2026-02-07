@@ -21,4 +21,9 @@ class Etablissement extends Model
     {
         return $this->hasMany(Departement::class);
     }
+
+    public function users()
+    {
+        return $this->hasMany(User::class);
+    }
 }

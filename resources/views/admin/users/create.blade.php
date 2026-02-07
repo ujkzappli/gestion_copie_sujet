@@ -94,13 +94,14 @@
                 {{-- Établissement --}}
                 <div class="mb-3" id="etablissement-field" style="display:none;">
                     <label class="form-label">Établissement</label>
-                    <select name="etablissement_id"
-                            class="form-select @error('etablissement_id') is-invalid @enderror">
+                    <select name="etablissement_id" id="etablissement-select"
+                            class="form-select @error('etablissement_id') is-invalid @enderror"
+                            onchange="filterDepartements()">
                         <option value="">-- Sélectionner un établissement --</option>
                         @foreach($etablissements as $etablissement)
                             <option value="{{ $etablissement->id }}"
                                 @selected(old('etablissement_id') == $etablissement->id)>
-                                {{ $etablissement->nom }}
+                                {{ $etablissement->sigle }} - {{ $etablissement->nom }}
                             </option>
                         @endforeach
                     </select>
@@ -112,13 +113,14 @@
                 {{-- Département --}}
                 <div class="mb-3" id="departement-field" style="display:none;">
                     <label class="form-label">Département</label>
-                    <select name="departement_id"
+                    <select name="departement_id" id="departement-select"
                             class="form-select @error('departement_id') is-invalid @enderror">
                         <option value="">-- Sélectionner un département --</option>
                         @foreach($departements as $departement)
                             <option value="{{ $departement->id }}"
+                                data-etablissement="{{ $departement->etablissement_id }}"
                                 @selected(old('departement_id') == $departement->id)>
-                                {{ $departement->nom }}
+                                {{ $departement->sigle }} - {{ $departement->nom }}
                             </option>
                         @endforeach
                     </select>
@@ -142,8 +144,8 @@ function handleTypeChange() {
     const etablissement = document.getElementById('etablissement-field');
     const departement = document.getElementById('departement-field');
 
-    const etablissementInput = document.querySelector('select[name="etablissement_id"]');
-    const departementInput = document.querySelector('select[name="departement_id"]');
+    const etablissementInput = document.getElementById('etablissement-select');
+    const departementInput = document.getElementById('departement-select');
 
     etablissement.style.display = 'none';
     departement.style.display = 'none';
@@ -164,6 +166,30 @@ function handleTypeChange() {
         departement.style.display = 'block';
         departementInput.required = true;
     }
+
+    filterDepartements(); // Filtrer départements après chaque changement
 }
+
+function filterDepartements() {
+    const etablissementId = document.getElementById('etablissement-select').value;
+    const departements = document.querySelectorAll('#departement-select option');
+
+    departements.forEach(option => {
+        const depEtab = option.dataset.etablissement;
+        if(option.value === "") return; // garder l'option vide
+        option.style.display = (depEtab === etablissementId) ? 'block' : 'none';
+    });
+
+    // Réinitialiser la sélection si elle n'est plus visible
+    const departementSelect = document.getElementById('departement-select');
+    if(departementSelect.value && !document.querySelector(`#departement-select option[value="${departementSelect.value}"]`).style.display.includes('block')) {
+        departementSelect.value = "";
+    }
+}
+
+// Appliquer la logique si la page recharge avec old values
+document.addEventListener('DOMContentLoaded', () => {
+    handleTypeChange();
+});
 </script>
 @endsection

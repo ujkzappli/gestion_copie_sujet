@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Models\Etablissement;
+use App\Models\Departement;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -12,7 +14,13 @@ class UserController extends Controller
     //FORMULAIRE INSCRIPTION//
     public function create()
     {
-        return view('auth.register');
+        $etablissements = Etablissement::all(); // récupérer tous les établissements
+
+        // tu peux aussi récupérer les départements si besoin
+        $departements = Departement::all();
+
+        // retourner la vue admin.users.create
+        return view('admin.users.create', compact('etablissements', 'departements'));
     }
 
     //TRAITEMENT INSCRIPTION//
