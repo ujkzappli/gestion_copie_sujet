@@ -66,9 +66,19 @@
                 @enderror
             </div>
 
-            {{-- Date de récupération --}}
+            {{-- Dates provisoires (readonly) --}}
             <div class="col-md-4 mb-3">
-                <label class="form-label">Date de récupération</label>
+                <label class="form-label">Date provisoire de récupération</label>
+                <input type="date" id="date_recuperation_prov" class="form-control" readonly>
+            </div>
+            <div class="col-md-4 mb-3">
+                <label class="form-label">Date provisoire de remise</label>
+                <input type="date" id="date_remise_prov" class="form-control" readonly>
+            </div>
+
+            {{-- Dates réelles (utilisateur peut modifier) --}}
+            <div class="col-md-4 mb-3">
+                <label class="form-label">Date réelle de récupération</label>
                 <input type="date" name="date_recuperation"
                        id="date_recuperation"
                        class="form-control @error('date_recuperation') is-invalid @enderror"
@@ -78,9 +88,8 @@
                 @enderror
             </div>
 
-            {{-- Date de remise --}}
             <div class="col-md-4 mb-3">
-                <label class="form-label">Date de remise</label>
+                <label class="form-label">Date réelle de remise</label>
                 <input type="date" name="date_remise"
                        id="date_remise"
                        class="form-control @error('date_remise') is-invalid @enderror"
@@ -111,19 +120,26 @@ document.getElementById('module_id').addEventListener('change', function () {
     document.getElementById('enseignant_id_hidden').value = enseignantId;
 });
 
-// Recalcul automatique des dates quand on modifie la date de dépôt
-document.getElementById('date_depot').addEventListener('change', function () {
-    let depot = new Date(this.value);
+// Recalcul automatique des dates provisoires quand on modifie la date de dépôt
+function updateProvisionalDates() {
+    let depot = new Date(document.getElementById('date_depot').value);
     if (!isNaN(depot)) {
-        let recup = new Date(depot);
-        recup.setDate(recup.getDate() + 2);
+        let recupProv = new Date(depot);
+        recupProv.setDate(recupProv.getDate() + 2);
+        document.getElementById('date_recuperation_prov').valueAsDate = recupProv;
 
-        let remise = new Date(recup);
-        remise.setDate(remise.getDate() + 3);
-
-        document.getElementById('date_recuperation').valueAsDate = recup;
-        document.getElementById('date_remise').valueAsDate = remise;
+        let remiseProv = new Date(recupProv);
+        remiseProv.setDate(remiseProv.getDate() + 3);
+        document.getElementById('date_remise_prov').valueAsDate = remiseProv;
+    } else {
+        document.getElementById('date_recuperation_prov').value = '';
+        document.getElementById('date_remise_prov').value = '';
     }
-});
+}
+
+// Initialisation au chargement de la page
+updateProvisionalDates();
+
+document.getElementById('date_depot').addEventListener('change', updateProvisionalDates);
 </script>
 @endsection

@@ -73,8 +73,9 @@ Route::middleware('auth')->group(function () {
 
 // dashboard DA
 
-Route::middleware('auth')->get('/dashboard', [DashboardController::class, 'index'])
-    ->name('dashboard');
+Route::get('/dashboard', function() {
+    return view('dashboard');
+})->middleware(['auth'])->name('dashboard');
 
 /* route qui gère auto index, create, store, show, edit update, destroy en meme temps 
 avec les methodes GET, POST PUT/PATCH etc concerné en fonction de chaque action (index, sotre ...)

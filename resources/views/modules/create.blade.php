@@ -44,7 +44,7 @@
                         @foreach($semestres as $semestre)
                             <option value="{{ $semestre->id }}"
                                 @selected(old('semestre_id') == $semestre->id)>
-                                {{ $semestre->libelle }}
+                                {{ $semestre->code }}
                             </option>
                         @endforeach
                     </select>

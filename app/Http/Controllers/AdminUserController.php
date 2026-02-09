@@ -65,5 +65,13 @@ class AdminUserController extends Controller
                          ->with('success', 'Utilisateur créé avec succès et mail envoyé.');
     }
 
+    public function destroy($id)
+    {
+        $user = User::findOrFail($id);
+        $user->delete();
+
+        return redirect()->route('admin.users.index')->with('success', 'Utilisateur supprimé.');
+    }
+
     // Index, edit, update, destroy peuvent être ajoutés ici
 }

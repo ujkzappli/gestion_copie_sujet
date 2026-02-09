@@ -24,26 +24,31 @@ class LotCopieController extends Controller
         }
 
         if ($user->type === 'DA') {
-            $lots = LotCopie::whereHas(
-                'module.semestre.option.departement.etablissement',
-                function ($q) use ($user) {
-                    $q->where('id', $user->etablissement_id);
-                }
-            )
-            ->with('module.enseignant')
-            ->get();
+            $lots = LotCopie::whereHas('module', function ($q) use ($user) {
+                $q->whereHas('semestre', function ($q2) use ($user) {
+                    $q2->whereHas('options', function ($q3) use ($user) {
+                        $q3->whereHas('departement', function ($q4) use ($user) {
+                            $q4->whereHas('etablissement', function ($q5) use ($user) {
+                                $q5->where('id', $user->etablissement_id);
+                            });
+                        });
+                    });
+                });
+            })->with('module.enseignant')->get();
         } elseif ($user->type === 'Enseignant') {
             $lots = LotCopie::whereHas('module', function ($q) use ($user) {
                 $q->where('enseignant_id', $user->id);
-            })
-            ->with('module.enseignant')
-            ->get();
+            })->with('module.enseignant')->get();
         } else {
             $lots = LotCopie::with('module.enseignant')->get();
         }
 
-        return view('lot_copies.index', compact('lots'));
+        // ⚡️ On renomme $lots en $lotCopies pour la vue
+        $lotCopies = $lots;
+
+        return view('lot_copies.index', compact('lotCopies'));
     }
+
 
     public function create()
     {
@@ -53,12 +58,9 @@ class LotCopieController extends Controller
         }
 
         if ($user->type === 'DA') {
-            $modules = Module::whereHas(
-                'semestre.option.departement.etablissement',
-                function ($q) use ($user) {
-                    $q->where('id', $user->etablissement_id);
-                }
-            )
+            $modules = Module::whereHas('semestre.options.departement', function ($q) use ($user) {
+                $q->where('etablissement_id', $user->etablissement_id);
+            })
             ->with('enseignant')
             ->get();
         } else {
@@ -91,10 +93,11 @@ class LotCopieController extends Controller
             'module_id'         => $validated['module_id'],
             'nombre_copies'     => $validated['nombre_copies'],
             'date_disponible'   => $dateDepot,
-            'date_recuperation' => $validated['date_recuperation'] ?? $dateDepot->copy()->addDays(2),
-            'date_remise'       => $validated['date_remise'] ?? $dateDepot->copy()->addDays(5),
+            'date_recuperation' => $validated['date_recuperation'] ?? null,
+            'date_remise'       => $validated['date_remise'] ?? null,
             'utilisateur_id'    => $user->id,
         ]);
+
 
         return redirect()
             ->route('lot-copies.index')

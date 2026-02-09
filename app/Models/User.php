@@ -29,7 +29,7 @@ class User extends Authenticatable
         'password',
     ];
 
-    // Laravel doit savoir quel champ est le mot de passe
+    
     public function getAuthPassword()
     {
         return $this->password;
@@ -97,6 +97,33 @@ class User extends Authenticatable
 
         return $query->whereNull('id');
     }
+
+    // pour en fonction du type diriger vers tel blade ou sidebar 
+
+    public function isAdmin() {
+        return $this->type === 'Admin';
+    }
+
+    public function isPresident() {
+        return $this->type === 'President';
+    }
+
+    public function isEnseignant() {
+        return $this->type === 'Enseignant';
+    }
+
+    public function isCD() {
+        return $this->type === 'CD';
+    }
+
+    public function isCS() {
+        return $this->type === 'CS';
+    }
+
+    public function isDA() {
+        return $this->type === 'DA';
+    }
+
 
 
 }

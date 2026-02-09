@@ -141,55 +141,69 @@
 <script>
 function handleTypeChange() {
     const type = document.getElementById('type').value;
-    const etablissement = document.getElementById('etablissement-field');
-    const departement = document.getElementById('departement-field');
+
+    const etablissementField = document.getElementById('etablissement-field');
+    const departementField = document.getElementById('departement-field');
 
     const etablissementInput = document.getElementById('etablissement-select');
     const departementInput = document.getElementById('departement-select');
 
-    etablissement.style.display = 'none';
-    departement.style.display = 'none';
+    // Reset total
+    etablissementField.style.display = 'none';
+    departementField.style.display = 'none';
+
     etablissementInput.required = false;
     departementInput.required = false;
 
-    if(type === 'DA' || type === 'CS'){
-        etablissement.style.display = 'block';
+    // DA / CS → seulement établissement
+    if (type === 'DA' || type === 'CS') {
+        etablissementField.style.display = 'block';
         etablissementInput.required = true;
-    }
-    if(type === 'CD'){
-        etablissement.style.display = 'block';
-        departement.style.display = 'block';
-        etablissementInput.required = true;
-        departementInput.required = true;
-    }
-    if(type === 'Enseignant'){
-        departement.style.display = 'block';
-        departementInput.required = true;
     }
 
-    filterDepartements(); // Filtrer départements après chaque changement
+    // CD / Enseignant → établissement d'abord
+    if (type === 'CD' || type === 'Enseignant') {
+        etablissementField.style.display = 'block';
+        etablissementInput.required = true;
+
+        // département seulement si établissement choisi
+        if (etablissementInput.value) {
+            departementField.style.display = 'block';
+            departementInput.required = true;
+        }
+    }
+
+    filterDepartements();
 }
 
 function filterDepartements() {
     const etablissementId = document.getElementById('etablissement-select').value;
-    const departements = document.querySelectorAll('#departement-select option');
+    const departementField = document.getElementById('departement-field');
+    const departementSelect = document.getElementById('departement-select');
+    const type = document.getElementById('type').value;
 
-    departements.forEach(option => {
-        const depEtab = option.dataset.etablissement;
-        if(option.value === "") return; // garder l'option vide
-        option.style.display = (depEtab === etablissementId) ? 'block' : 'none';
+    // Filtrer les départements
+    departementSelect.querySelectorAll('option').forEach(option => {
+        if (!option.value) return;
+        option.style.display =
+            option.dataset.etablissement === etablissementId ? 'block' : 'none';
     });
 
-    // Réinitialiser la sélection si elle n'est plus visible
-    const departementSelect = document.getElementById('departement-select');
-    if(departementSelect.value && !document.querySelector(`#departement-select option[value="${departementSelect.value}"]`).style.display.includes('block')) {
-        departementSelect.value = "";
+    // Afficher le département uniquement pour CD / Enseignant
+    if ((type === 'CD' || type === 'Enseignant') && etablissementId) {
+        departementField.style.display = 'block';
+        departementSelect.required = true;
+    } else {
+        departementField.style.display = 'none';
+        departementSelect.required = false;
+        departementSelect.value = '';
     }
 }
 
-// Appliquer la logique si la page recharge avec old values
+// Au chargement (old values)
 document.addEventListener('DOMContentLoaded', () => {
     handleTypeChange();
 });
 </script>
+
 @endsection
