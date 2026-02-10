@@ -7,6 +7,7 @@ use App\Models\Module;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use App\Notifications\CopiesDisponiblesNotification;
 use Carbon\Carbon;
 
 class LotCopieController extends Controller
@@ -43,7 +44,7 @@ class LotCopieController extends Controller
             $lots = LotCopie::with('module.enseignant')->get();
         }
 
-        // ⚡️ On renomme $lots en $lotCopies pour la vue
+        
         $lotCopies = $lots;
 
         return view('lot_copies.index', compact('lotCopies'));
@@ -72,6 +73,7 @@ class LotCopieController extends Controller
         return view('lot_copies.create', compact('modules', 'enseignants'));
     }
 
+
     public function store(Request $request)
     {
         $user = Auth::user();
@@ -80,29 +82,32 @@ class LotCopieController extends Controller
         }
 
         $validated = $request->validate([
-            'module_id'         => 'required|exists:modules,id',
-            'nombre_copies'     => 'required|integer|min:1',
-            'date_disponible'   => 'required|date',
-            'date_recuperation' => 'nullable|date',
-            'date_remise'       => 'nullable|date',
+            'module_id'       => 'required|exists:modules,id',
+            'nombre_copies'   => 'required|integer|min:1',
+            'date_disponible' => 'required|date',
         ]);
 
-        $dateDepot = Carbon::parse($validated['date_disponible']);
-
-        LotCopie::create([
-            'module_id'         => $validated['module_id'],
-            'nombre_copies'     => $validated['nombre_copies'],
-            'date_disponible'   => $dateDepot,
-            'date_recuperation' => $validated['date_recuperation'] ?? null,
-            'date_remise'       => $validated['date_remise'] ?? null,
-            'utilisateur_id'    => $user->id,
+        $lot = LotCopie::create([
+            'module_id'       => $validated['module_id'],
+            'nombre_copies'   => $validated['nombre_copies'],
+            'date_disponible' => $validated['date_disponible'],
+            'date_recuperation' => null, // ❗️IMPORTANT
+            'date_remise'       => null, // ❗️IMPORTANT
+            'utilisateur_id'  => $user->id,
         ]);
 
+        // 🔔 + 📧 Notification à l’enseignant
+        $enseignant = $lot->module->enseignant;
+
+        if ($enseignant) {
+            $enseignant->notify(new CopiesDisponiblesNotification($lot));
+        }
 
         return redirect()
             ->route('lot-copies.index')
-            ->with('success', 'Lot de copies créé avec succès');
+            ->with('success', 'Lot de copies créé et notification envoyée à l’enseignant');
     }
+
 
     // 🟢 CORRECTED: use $lot_copy here to match the route parameter {lot_copy}
     public function edit(LotCopie $lot_copy)

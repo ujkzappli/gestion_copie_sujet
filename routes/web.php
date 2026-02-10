@@ -12,6 +12,7 @@ use App\Http\Controllers\LotCopieController;
 use App\Http\Controllers\AdminUserController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\DA\DashboardController;
+use App\Http\Controllers\NotificationController;
 
 /*
 |--------------------------------------------------------------------------
@@ -93,5 +94,7 @@ Route::resource('semestres', SemestreController::class);
 Route::resource('modules', ModuleController::class);
 
 Route::resource('lot-copies', LotCopieController::class);
+
+Route::resource('notifications', NotificationController::class)->only(['index', 'show']);
 
 

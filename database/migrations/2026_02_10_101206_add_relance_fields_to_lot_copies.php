@@ -11,12 +11,9 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('notifications', function (Blueprint $table) {
-            $table->id();
-            $table->text('message');
-            $table->date('date_envoie');
-            $table->foreignId('utilisateur_id')->constrained('users')->onDelete('cascade');
-            $table->timestamps();
+        Schema::table('lot_copies', function (Blueprint $table) {
+            $table->date('last_recuperation_reminder_at')->nullable();
+            $table->date('last_remise_reminder_at')->nullable();
         });
     }
 
@@ -25,6 +22,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('notifications');
+        Schema::table('lot_copies', function (Blueprint $table) {
+            //
+        });
     }
 };
