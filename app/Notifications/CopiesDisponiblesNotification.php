@@ -55,8 +55,11 @@ class CopiesDisponiblesNotification extends Notification
         $dateLimite = Carbon::parse($this->lot->date_disponible)->addDay()->format('d/m/Y');
 
         return (new MailMessage)
-            ->title('Copies disponibles pour correction')
-            ->message("Bonjour {$notifiable->prenom_utilisateur} ! Les copies de {$this->lot->module->nom} sont disponibles à partir du {$this->lot->date_disponible->format('d/m/Y')}..."),
-            'lot_id' => $this->lot->id,
-            'date_disponible' => $this->lot->date_disponible->format('Y-m-d'),
+            ->subject('Copies disponibles pour correction')
+            ->greeting("Bonjour {$notifiable->prenom_utilisateur},")
+            ->line("Les copies du module {$this->lot->module->nom} sont disponibles depuis le {$dateDisponible}.")
+            ->line("Merci de passer à la scolarité au plus tard le {$dateLimite}.")
+            ->action('Voir les détails', url('/notifications'))
+            ->line('Merci et bon courage pour la correction.');
     }
+}

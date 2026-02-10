@@ -66,4 +66,10 @@
         </a>
     </li>
 
+    <li class="nav-item">
+        <a href="{{ route('system.scan') }}" class="nav-link btn btn-warning text-white mb-2">
+            <i class="bi bi-search"></i> Lancer le scan des retards
+        </a>
+    </li>
+
 </ul>

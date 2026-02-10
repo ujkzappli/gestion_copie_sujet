@@ -13,6 +13,7 @@ use App\Http\Controllers\AdminUserController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\DA\DashboardController;
 use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\SystemScanController;
 
 /*
 |--------------------------------------------------------------------------
@@ -97,4 +98,7 @@ Route::resource('lot-copies', LotCopieController::class);
 
 Route::resource('notifications', NotificationController::class)->only(['index', 'show']);
 
+Route::post('/system/scan', [SystemScanController::class, 'scan'])
+    ->name('system.scan');
 
+Route::get('/system/scan', [SystemScanController::class, 'scan'])->name('system.scan');
