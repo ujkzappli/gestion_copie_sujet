@@ -133,6 +133,12 @@
                     <a href="{{ route('admin.users.create') }}" class="btn btn-secondary me-2">Annuler</a>
                     <button type="submit" class="btn btn-primary">Créer l'utilisateur</button>
                 </div>
+
+                <div class="mb-3">
+                    <a href="{{ route('admin.users.import.form') }}" class="btn btn-success">
+                        Importer des utilisateurs (CSV)
+                    </a>
+                </div>
             </form>
         </div>
     </div>

@@ -9,9 +9,12 @@ use Illuminate\Http\Request;
 
 class ModuleController extends Controller
 {
-    /**
-     * Affiche tous les modules selon le rôle de l'utilisateur
-     */
+    /*
+    |--------------------------------------------------------------------------
+    | INDEX
+    |--------------------------------------------------------------------------
+    */
+
     public function index()
     {
         $user = auth()->user();
@@ -19,60 +22,66 @@ class ModuleController extends Controller
         $query = Module::with(['semestre', 'enseignant']);
 
         if ($user->type === 'DA' || $user->type === 'CS') {
-            // Modules liés à l'établissement de l'utilisateur
             $query->whereHas('enseignant', function ($q) use ($user) {
                 $q->whereHas('departement', function ($q2) use ($user) {
                     $q2->where('etablissement_id', $user->etablissement_id);
                 });
             });
-        } elseif ($user->type === 'CD') {
-            // Modules liés au département de l'utilisateur
+        } 
+        elseif ($user->type === 'CD') {
             $query->whereHas('enseignant', function ($q) use ($user) {
                 $q->where('departement_id', $user->departement_id);
             });
-        } elseif ($user->type === 'Enseignant') {
-            // L'enseignant ne voit que ses modules
+        } 
+        elseif ($user->type === 'Enseignant') {
             $query->where('enseignant_id', $user->id);
         }
-        // Admin / Président → accès complet
 
         $modules = $query->get();
 
         return view('modules.index', compact('modules'));
     }
 
-    /**
-     * Formulaire de création d'un module
-     */
+    /*
+    |--------------------------------------------------------------------------
+    | CREATE
+    |--------------------------------------------------------------------------
+    */
+
     public function create()
     {
         $user = auth()->user();
 
-        // Enseignants disponibles selon le rôle
-        if ($user->type === 'DA' || $user->type === 'CS') {
-            $enseignants = User::where('type', 'Enseignant')
-                ->whereHas('departement', function ($q) use ($user) {
-                    $q->where('etablissement_id', $user->etablissement_id);
-                })->get();
-        } elseif ($user->type === 'CD') {
-            $enseignants = User::where('type', 'Enseignant')
-                ->where('departement_id', $user->departement_id)
-                ->get();
-        } else {
-            // Admin / Président → tous les enseignants
-            $enseignants = User::where('type', 'Enseignant')->get();
+        // Seuls CD et DA peuvent créer
+        if (!in_array($user->type, ['CD', 'DA'])) {
+            abort(403);
         }
+
+        // CD et DA voient TOUS les enseignants
+        $enseignants = User::where('type', 'Enseignant')
+            ->select('id', 'nom_utilisateur', 'prenom_utilisateur', 'matricule_utilisateur')
+            ->orderBy('nom_utilisateur')
+            ->get();
 
         $semestres = Semestre::orderBy('libelle')->get();
 
-        return view('modules.create', compact('semestres', 'enseignants'));
+        return view('modules.create', compact('enseignants', 'semestres'));
     }
 
-    /**
-     * Stocke un nouveau module
-     */
+    /*
+    |--------------------------------------------------------------------------
+    | STORE
+    |--------------------------------------------------------------------------
+    */
+
     public function store(Request $request)
     {
+        $user = auth()->user();
+
+        if (!in_array($user->type, ['CD', 'DA'])) {
+            abort(403);
+        }
+
         $request->validate([
             'code' => 'required|string|unique:modules,code',
             'nom' => 'required|string',
@@ -80,52 +89,55 @@ class ModuleController extends Controller
             'enseignant_id' => 'nullable|exists:users,id',
         ]);
 
-        Module::create($request->only(['code', 'nom', 'semestre_id', 'enseignant_id']));
+        Module::create($request->only([
+            'code',
+            'nom',
+            'semestre_id',
+            'enseignant_id'
+        ]));
 
         return redirect()->route('modules.index')
-                         ->with('success', 'Module créé avec succès');
+            ->with('success', 'Module créé avec succès');
     }
 
-    /**
-     * Affiche un module
-     */
-    public function show(Module $module)
-    {
-        $module->load(['semestre', 'enseignant']);
-        return view('modules.show', compact('module'));
-    }
+    /*
+    |--------------------------------------------------------------------------
+    | EDIT
+    |--------------------------------------------------------------------------
+    */
 
-    /**
-     * Formulaire d'édition d'un module
-     */
     public function edit(Module $module)
     {
         $user = auth()->user();
 
-        // Filtrer les enseignants selon le rôle
-        if ($user->type === 'DA' || $user->type === 'CS') {
-            $enseignants = User::where('type', 'Enseignant')
-                ->whereHas('departement', function ($q) use ($user) {
-                    $q->where('etablissement_id', $user->etablissement_id);
-                })->get();
-        } elseif ($user->type === 'CD') {
-            $enseignants = User::where('type', 'Enseignant')
-                ->where('departement_id', $user->departement_id)
-                ->get();
-        } else {
-            $enseignants = User::where('type', 'Enseignant')->get();
+        if (!in_array($user->type, ['CD', 'DA'])) {
+            abort(403);
         }
+
+        $enseignants = User::where('type', 'Enseignant')
+            ->select('id', 'nom_utilisateur', 'prenom_utilisateur', 'matricule_utilisateur')
+            ->orderBy('nom_utilisateur')
+            ->get();
 
         $semestres = Semestre::orderBy('libelle')->get();
 
-        return view('modules.edit', compact('module', 'semestres', 'enseignants'));
+        return view('modules.edit', compact('module', 'enseignants', 'semestres'));
     }
 
-    /**
-     * Met à jour un module existant
-     */
+    /*
+    |--------------------------------------------------------------------------
+    | UPDATE
+    |--------------------------------------------------------------------------
+    */
+
     public function update(Request $request, Module $module)
     {
+        $user = auth()->user();
+
+        if (!in_array($user->type, ['CD', 'DA'])) {
+            abort(403);
+        }
+
         $request->validate([
             'code' => 'required|string|unique:modules,code,' . $module->id,
             'nom' => 'required|string',
@@ -133,20 +145,34 @@ class ModuleController extends Controller
             'enseignant_id' => 'nullable|exists:users,id',
         ]);
 
-        $module->update($request->only(['code', 'nom', 'semestre_id', 'enseignant_id']));
+        $module->update($request->only([
+            'code',
+            'nom',
+            'semestre_id',
+            'enseignant_id'
+        ]));
 
         return redirect()->route('modules.index')
-                         ->with('success', 'Module mis à jour avec succès');
+            ->with('success', 'Module mis à jour avec succès');
     }
 
-    /**
-     * Supprime un module
-     */
+    /*
+    |--------------------------------------------------------------------------
+    | DELETE
+    |--------------------------------------------------------------------------
+    */
+
     public function destroy(Module $module)
     {
+        $user = auth()->user();
+
+        if (!in_array($user->type, ['CD', 'DA'])) {
+            abort(403);
+        }
+
         $module->delete();
 
         return redirect()->route('modules.index')
-                         ->with('success', 'Module supprimé avec succès');
+            ->with('success', 'Module supprimé avec succès');
     }
 }

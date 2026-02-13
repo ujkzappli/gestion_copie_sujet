@@ -16,7 +16,12 @@ class Module extends Model
         'enseignant_id',
     ];
 
-    // Relations
+    /*
+    |--------------------------------------------------------------------------
+    | Relations
+    |--------------------------------------------------------------------------
+    */
+
     public function semestre()
     {
         return $this->belongsTo(Semestre::class);
@@ -27,18 +32,16 @@ class Module extends Model
         return $this->belongsTo(User::class, 'enseignant_id');
     }
 
-    // Relation calculée vers département
-    public function departement()
+    // Accesseur propre pour département
+    public function getDepartementAttribute()
     {
-        return $this->enseignant ? $this->enseignant->departement : null;
+        return $this->enseignant?->departement;
     }
 
-    // Relation calculée vers établissement
-    public function etablissement()
+    // Accesseur propre pour établissement
+    public function getEtablissementAttribute()
     {
-        return $this->enseignant && $this->enseignant->departement
-            ? $this->enseignant->departement->etablissement
-            : null;
+        return $this->enseignant?->departement?->etablissement;
     }
 
     public function lotCopies()

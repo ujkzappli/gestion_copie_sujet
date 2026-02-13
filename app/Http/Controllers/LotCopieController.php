@@ -5,6 +5,9 @@ namespace App\Http\Controllers;
 use App\Models\LotCopie;
 use App\Models\Module;
 use App\Models\User;
+use App\Models\Option;
+use App\Models\SessionExamen;
+use App\Models\Semestre;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Notifications\CopiesDisponiblesNotification;
@@ -53,63 +56,117 @@ class LotCopieController extends Controller
 
     public function create()
     {
-        $user = Auth::user();
+        $user = auth()->user(); // utilisateur connecté
+
         if (!$user) {
             abort(403);
         }
 
-        if ($user->type === 'DA') {
-            $modules = Module::whereHas('semestre.options.departement', function ($q) use ($user) {
+        // --- 1. Années académiques, semestres et sessions ---
+        $annees = SessionExamen::select('annee_academique')->distinct()->pluck('annee_academique');
+        $semestres = Semestre::all();
+        $sessions = SessionExamen::TYPES;
+
+        // --- 2. Options selon rôle ---
+        if ($user->isAdmin() || $user->isDA() || $user->isCS()) {
+            $options = Option::whereHas('departement', function($q) use ($user) {
                 $q->where('etablissement_id', $user->etablissement_id);
-            })
-            ->with('enseignant')
-            ->get();
+            })->get();
+        } elseif ($user->isCD()) {
+            $options = Option::where('departement_id', $user->departement_id)->get();
         } else {
-            $modules = Module::with('enseignant')->get();
+            $options = $user->departementsEnseignes()->with('options')->get()->pluck('options')->flatten();
         }
 
-        $enseignants = User::where('type', 'Enseignant')->get();
+        // --- 3. Modules selon rôle ---
+        // ⚠️ On ne fait plus $option->modules en Blade, on récupère tous les modules filtrables via JS
+        if ($user->isAdmin() || $user->isCS()) {
+            $modules = Module::with('enseignant', 'semestre.options')->get();
+        } elseif ($user->isDA()) {
+            $modules = Module::whereHas('semestre.options.departement', function($q) use ($user) {
+                $q->where('etablissement_id', $user->etablissement_id);
+            })->with('enseignant', 'semestre.options')->get();
+        } elseif ($user->isCD()) {
+            $modules = Module::whereHas('semestre.options', function($q) use ($user) {
+                $q->where('departement_id', $user->departement_id);
+            })->with('enseignant', 'semestre.options')->get();
+        } else {
+            // Enseignant -> seulement les modules qu'il enseigne
+            $modules = $user->modulesEnseignes()->with('enseignant', 'semestre.options')->get();
+        }
 
-        return view('lot_copies.create', compact('modules', 'enseignants'));
+        // --- 4. Enseignants ---
+        if ($user->isAdmin() || $user->isDA() || $user->isCS()) {
+            $enseignants = User::where('type', 'Enseignant')->get();
+        } else {
+            $enseignants = collect([$user]); // l’enseignant connecté
+        }
+
+        // --- 5. Retour de la vue ---
+        return view('lot_copies.create', compact(
+            'annees',
+            'sessions',
+            'semestres',
+            'options',
+            'modules',
+            'enseignants'
+        ));
     }
+
 
 
     public function store(Request $request)
     {
-        $user = Auth::user();
+        $user = auth()->user();
         if (!$user) {
-            abort(403);
+            abort(403); // sécurité
         }
 
-        $validated = $request->validate([
+        // --- 1. Validation des champs ---
+        $data = $request->validate([
             'module_id'       => 'required|exists:modules,id',
             'nombre_copies'   => 'required|integer|min:1',
             'date_disponible' => 'required|date',
+            'option_id'       => 'required|exists:options,id',
+            'semestre_id'     => 'required|exists:semestres,id',
+            'session_type'    => 'required|string',
+            'annee_academique'=> 'required|string',
         ]);
 
+        // --- 2. Création du lot de copies ---
         $lot = LotCopie::create([
-            'module_id'       => $validated['module_id'],
-            'nombre_copies'   => $validated['nombre_copies'],
-            'date_disponible' => $validated['date_disponible'],
-            'date_recuperation' => null, // ❗️IMPORTANT
-            'date_remise'       => null, // ❗️IMPORTANT
+            'module_id'       => $data['module_id'],
+            'nombre_copies'   => $data['nombre_copies'],
+            'date_disponible' => $data['date_disponible'],
+            'date_recuperation' => null,
+            'date_remise'       => null,
             'utilisateur_id'  => $user->id,
         ]);
 
-        // 🔔 + 📧 Notification à l’enseignant
-        $enseignant = $lot->module->enseignant;
+        // --- 3. Association avec la session examen ---
+        $session = SessionExamen::where('annee_academique', $data['annee_academique'])
+                                ->where('type', strtoupper($data['session_type']))
+                                ->where('semestre_id', $data['semestre_id'])
+                                ->first();
+        if ($session) {
+            $lot->sessionExamens()->attach($session->id);
+        }
 
+        // --- 4. Notification à l'enseignant ---
+        $enseignant = $lot->module->enseignant;
         if ($enseignant) {
             $enseignant->notify(new CopiesDisponiblesNotification($lot));
         }
 
+        // --- 5. Redirection avec message de succès ---
         return redirect()
             ->route('lot-copies.index')
-            ->with('success', 'Lot de copies créé et notification envoyée à l’enseignant');
+            ->with('success', 'Lot de copies créé et notification envoyée à l’enseignant.');
     }
 
 
-    // 🟢 CORRECTED: use $lot_copy here to match the route parameter {lot_copy}
+
+    //  CORRECTED: use $lot_copy here to match the route parameter {lot_copy}
     public function edit(LotCopie $lot_copy)
     {
         $modules = Module::with('enseignant')->get();

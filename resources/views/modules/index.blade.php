@@ -60,7 +60,7 @@
                             </td>
 
                             <td>
-                                {{ $module->enseignant?->prenom_utilisateur }} {{ $module->enseignant?->nom_utilisateur }}
+                                {{ $module->enseignant?->prenom_utilisateur }} {{ $module->enseignant?->nom_utilisateur }} - {{ $module->enseignant?->matricule_utilisateur }}
                             </td>
 
                             <td class="text-center">

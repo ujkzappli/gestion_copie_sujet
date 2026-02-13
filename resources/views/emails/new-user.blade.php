@@ -5,7 +5,7 @@
     <title>Création de votre compte</title>
 </head>
 <body>
-    <p>Bonjour {{ $user->nom_utilisateur }} {{ $user->prenom_utilisateur }},</p>
+    <p>Bonjour {{ $user->nom_utilisateur }} {{ $user->prenom_utilisateur }}, matricule {{ $user->matricule_utilisateur }}</p>
 
     <p>Votre compte a été créé avec succès.</p>
 

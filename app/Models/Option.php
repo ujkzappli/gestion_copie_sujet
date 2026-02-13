@@ -24,6 +24,11 @@ class Option extends Model
         return $this->belongsTo(Departement::class);
     }
 
+    public function modules()
+    {
+        return $this->hasManyThrough(Module::class, Semestre::class, 'option_id', 'semestre_id');
+    }
+
     /**
      * Une option appartient à un semestre
      */

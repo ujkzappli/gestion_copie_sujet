@@ -11,9 +11,12 @@ use App\Http\Controllers\ModuleController;
 use App\Http\Controllers\LotCopieController;
 use App\Http\Controllers\AdminUserController;
 use App\Http\Controllers\Auth\LoginController;
-use App\Http\Controllers\DA\DashboardController;
+use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\SystemScanController;
+use App\Models\Departement;
+use App\Models\Option;
+use App\Models\SessionExamen;
 
 /*
 |--------------------------------------------------------------------------
@@ -31,14 +34,26 @@ Route::get('/', function () {
 */
 
 Route::middleware('auth')->group(function () {
-    Route::get('/admin/users', [AdminUserController::class, 'index'])->name('admin.users.index');
-    Route::get('/admin/users/create', [AdminUserController::class, 'create'])->name('admin.users.create');
-    Route::post('/admin/users', [AdminUserController::class, 'store'])->name('admin.users.store');
-    Route::get('/admin/users/{user}', [AdminUserController::class, 'show'])->name('admin.users.show');
-    Route::get('/admin/users/{user}/edit', [AdminUserController::class, 'edit'])->name('admin.users.edit');
-    Route::put('/admin/users/{user}', [AdminUserController::class, 'update'])->name('admin.users.update');
-    Route::delete('/admin/users/{user}', [AdminUserController::class, 'destroy'])->name('admin.users.destroy');
+
+    Route::prefix('admin/users')->group(function () {
+
+        // Formulaire d'import
+        Route::get('/import', [AdminUserController::class, 'importForm'])
+            ->name('admin.users.import.form');
+
+        // Traitement import
+        Route::post('/import', [AdminUserController::class, 'importProcess'])
+            ->name('admin.users.import.process');
+
+        // Routes classiques
+        Route::get('/', [AdminUserController::class, 'index'])->name('admin.users.index');
+        Route::get('/create', [AdminUserController::class, 'create'])->name('admin.users.create');
+        Route::post('/', [AdminUserController::class, 'store'])->name('admin.users.store');
+        Route::delete('/{id}', [AdminUserController::class, 'destroy'])->name('admin.users.destroy');
+    });
+
 });
+
 
 
 /* Connexion */
@@ -46,15 +61,6 @@ Route::get('/login', [LoginController::class, 'showLogin'])->name('login');
 Route::post('/login', [LoginController::class, 'login']);
 Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
 
-
-/*
-|--------------------------------------------------------------------------
-| Dashboard (APRÈS LOGIN)
-|--------------------------------------------------------------------------
-*/
-Route::get('/dashboard', function () {
-    return view('dashboard');
-})->middleware('auth')->name('dashboard');
 
 /*
 |--------------------------------------------------------------------------
@@ -75,9 +81,13 @@ Route::middleware('auth')->group(function () {
 
 // dashboard DA
 
-Route::get('/dashboard', function() {
-    return view('dashboard');
-})->middleware(['auth'])->name('dashboard');
+Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+Route::get('/dashboard/da', [DashboardController::class, 'da'])->name('dashboard.da');
+Route::get('/dashboard/cd', [DashboardController::class, 'cd'])->name('dashboard.cd');
+Route::get('/dashboard/cs', [DashboardController::class, 'cs'])->name('dashboard.cs');
+Route::get('/dashboard/enseignant', [DashboardController::class, 'enseignant'])->name('dashboard.enseignant');
+Route::get('/dashboard/president', [DashboardController::class, 'president'])->name('dashboard.president');
+Route::get('/dashboard/admin', [DashboardController::class, 'admin'])->name('dashboard.admin');
 
 /* route qui gère auto index, create, store, show, edit update, destroy en meme temps 
 avec les methodes GET, POST PUT/PATCH etc concerné en fonction de chaque action (index, sotre ...)
@@ -95,6 +105,21 @@ Route::resource('semestres', SemestreController::class);
 Route::resource('modules', ModuleController::class);
 
 Route::resource('lot-copies', LotCopieController::class);
+
+// Départements par établissement
+Route::get('/api/departements/{etablissement}', function($id){
+    return Departement::where('etablissement_id', $id)->get();
+});
+
+// Options par département
+Route::get('/api/options/{departement}', function($id){
+    return Option::where('departement_id', $id)->get();
+});
+
+// Sessions par option
+Route::get('/api/sessions/{option}', function($id){
+    return SessionExamen::whereHas('options', fn($q)=>$q->where('id', $id))->get();
+});
 
 Route::resource('notifications', NotificationController::class)->only(['index', 'show']);
 

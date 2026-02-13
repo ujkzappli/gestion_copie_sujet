@@ -35,4 +35,10 @@ class SessionExamen extends Model
             'option_session_examen'
         )->withTimestamps();
     }
+
+    public function lotsCopies()
+    {
+        return $this->belongsToMany(LotCopie::class, 'lot_copies_session_examen')->withTimestamps();
+    }
+
 }

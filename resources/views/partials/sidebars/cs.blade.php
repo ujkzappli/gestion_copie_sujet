@@ -9,22 +9,4 @@
         </a>
     </li>
 
-    {{-- Départements --}}
-    <li>
-        <a class="m-link {{ request()->routeIs('departements.*') ? 'active' : '' }}"
-           href="{{ route('departements.index') }}">
-            <i class="icofont-ui-office fs-5"></i>
-            <span>Départements</span>
-        </a>
-    </li>
-
-    {{-- Options --}}
-    <li>
-        <a class="m-link {{ request()->routeIs('options.*') ? 'active' : '' }}"
-           href="{{ route('options.index') }}">
-            <i class="icofont-ui-settings fs-5"></i>
-            <span>Options</span>
-        </a>
-    </li>
-
 </ul>

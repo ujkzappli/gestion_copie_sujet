@@ -70,7 +70,7 @@
                         <tr>
                             <td>{{ $lot->id }}</td>
                             <td>{{ $lot->module->nom ?? '' }}</td>
-                            <td>{{ $lot->module->enseignant?->prenom_utilisateur }} {{ $lot->module->enseignant?->nom_utilisateur }}</td>
+                            <td>{{ $lot->module->enseignant?->prenom_utilisateur }} {{ $lot->module->enseignant?->nom_utilisateur }} - {{ $lot->module->enseignant?->matricule_utilisateur }}</td>
                             <td>{{ $lot->nombre_copies }}</td>
                             <td>{{ $lot->date_disponible?->format('d/m/Y') }}</td>
                             <td>{{ $dateLimiteRecup?->format('d/m/Y') }}</td>

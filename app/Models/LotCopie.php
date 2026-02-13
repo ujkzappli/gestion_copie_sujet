@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Carbon\Carbon;
 
 class LotCopie extends Model
 {
@@ -37,6 +38,11 @@ class LotCopie extends Model
         return $this->belongsTo(User::class, 'utilisateur_id');
     }
 
+    public function sessionExamens()
+    {
+        return $this->belongsToMany(SessionExamen::class, 'lot_copies_session_examen')->withTimestamps();
+    }
+
     public function scopeForUser($query, User $user)
     {
         if ($user->type === 'Admin') {
@@ -60,5 +66,31 @@ class LotCopie extends Model
         }
 
         return $query->whereNull('id');
+    }
+
+    protected $appends = ['statut_calcule'];
+
+    public function getStatutCalculeAttribute()
+    {
+        $now = Carbon::now();
+
+        if (is_null($this->date_disponible)) {
+            \Log::error('date_disponible est NULL pour LotCopie id=' . $this->id);
+            return 'Statut inconnu';
+        }
+
+        // Rien récupéré
+        if (is_null($this->date_recuperation)) {
+            $limite = $this->date_disponible->copy()->addDays(2);
+            return $now->gt($limite) ? 'En retard' : 'En cours';
+        }
+
+        // Récupéré mais pas remis
+        if (is_null($this->date_remise)) {
+            $limite = $this->date_recuperation->copy()->addDays(3);
+            return $now->gt($limite) ? 'En retard' : 'En cours';
+        }
+
+        return 'Validé';
     }
 }

@@ -59,7 +59,7 @@
                             <option value="">-- Choisir --</option>
                             @foreach($enseignants as $enseignant)
                                 <option value="{{ $enseignant->id }}">
-                                    {{ $enseignant->nom_utilisateur }} {{ $enseignant->prenom_utilisateur }}
+                                    {{ $enseignant->nom_utilisateur }} {{ $enseignant->prenom_utilisateur }} - {{ $enseignant->matricule_utilisateur }}
                                 </option>
                             @endforeach
                         </select>
