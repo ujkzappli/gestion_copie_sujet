@@ -61,20 +61,20 @@ class UserController extends Controller
 
     //TRAITEMENT CONNEXION
     public function login(Request $request)
-{
-    $credentials = [
-        'email' => $request->email,
-        'password' => $request->password_utilisateur,
-    ];
+    {
+        $credentials = [
+            'email' => $request->email,
+            'password' => $request->password_utilisateur,
+        ];
 
-    if (Auth::attempt($credentials)) {
-          return redirect()->route('dashboard');
+        if (Auth::attempt($credentials)) {
+            return redirect()->route('dashboard');
+        }
+
+        return back()->withErrors([
+            'email' => 'Email ou mot de passe incorrect',
+        ]);
     }
-
-    return back()->withErrors([
-        'email' => 'Email ou mot de passe incorrect',
-    ]);
-}
 
 
     //DECONNEXION

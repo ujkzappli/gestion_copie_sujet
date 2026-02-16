@@ -87,7 +87,7 @@ class LotCopie extends Model
 
         // Récupéré mais pas remis
         if (is_null($this->date_remise)) {
-            $limite = $this->date_recuperation->copy()->addDays(3);
+            $limite = $this->date_recuperation->copy()->addDays(12);
             return $now->gt($limite) ? 'En retard' : 'En cours';
         }
 

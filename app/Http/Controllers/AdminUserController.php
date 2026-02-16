@@ -136,6 +136,12 @@ class AdminUserController extends Controller
                     ->with('import_errors', $importErrors);
     }
 
+    public function show(User $user)
+    {
+        // Affiche la page de détails d’un utilisateur
+        return view('admin.users.show', compact('user'));
+    }
+
     public function destroy($id)
     {
         $user = User::findOrFail($id);

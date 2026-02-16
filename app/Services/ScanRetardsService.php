@@ -89,7 +89,7 @@ class ScanRetardsService
     {
         if (!$lot->date_recuperation || !$lot->date_remise) return;
 
-        $limite = $lot->date_recuperation->copy()->addDays(3);
+        $limite = $lot->date_disponible->copy()->addDays(14);
 
         if ($today->lte($limite)) return;
 

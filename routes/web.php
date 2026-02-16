@@ -49,11 +49,13 @@ Route::middleware('auth')->group(function () {
         Route::get('/', [AdminUserController::class, 'index'])->name('admin.users.index');
         Route::get('/create', [AdminUserController::class, 'create'])->name('admin.users.create');
         Route::post('/', [AdminUserController::class, 'store'])->name('admin.users.store');
+        Route::get('/{user}', [AdminUserController::class, 'show'])->name('admin.users.show');
+        Route::get('/{user}/edit', [AdminUserController::class, 'edit'])->name('admin.users.edit');
+        Route::put('/{user}', [AdminUserController::class, 'update'])->name('admin.users.update');
         Route::delete('/{id}', [AdminUserController::class, 'destroy'])->name('admin.users.destroy');
     });
 
 });
-
 
 
 /* Connexion */
