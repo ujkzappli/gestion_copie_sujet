@@ -1,12 +1,11 @@
-<ul class="menu-list flex-grow-1 mt-3">
+{{-- Sidebar pour President --}}
 
-    {{-- Gestion des copies --}}
-    <li>
-        <a class="m-link {{ request()->routeIs('lot-copies.*') ? 'active' : '' }}"
-           href="{{ route('lot-copies.index') }}">
-            <i class="fas fa-copy fs-5"></i>
-            <span>Lot Copies</span>
-        </a>
-    </li>
+<li class="sidebar-title">Gestion</li>
 
-</ul>
+<li>
+    <a class="m-link {{ request()->routeIs('lot-copies.*') ? 'active' : '' }}"
+       href="{{ route('lot-copies.index') }}">
+        <i class="bi bi-archive-fill fs-5"></i>
+        <span>Lots de Copies</span>
+    </a>
+</li>

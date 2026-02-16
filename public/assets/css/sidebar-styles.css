@@ -1,0 +1,61 @@
+/* Styles pour les sidebars */
+
+/* Titre de section dans la sidebar */
+.sidebar-title {
+    color: #6c757d;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding: 1rem 0.75rem 0.5rem;
+    margin-top: 1rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.sidebar-title:first-child {
+    margin-top: 0;
+}
+
+/* Menu link hover effects */
+.sidebar .m-link {
+    transition: all 0.3s ease;
+    border-radius: 8px;
+    margin-bottom: 0.25rem;
+}
+
+.sidebar .m-link:hover {
+    background: rgba(255, 255, 255, 0.1);
+    transform: translateX(5px);
+}
+
+.sidebar .m-link.active {
+    background: rgba(255, 255, 255, 0.15);
+    border-left: 3px solid #fff;
+}
+
+.sidebar .m-link i {
+    width: 24px;
+    text-align: center;
+    margin-right: 0.75rem;
+}
+
+/* Badge pour notifications */
+.sidebar .badge {
+    font-size: 0.65rem;
+    padding: 0.25rem 0.5rem;
+    margin-left: auto;
+}
+
+/* Animation pour icônes */
+.sidebar .m-link:hover i {
+    transform: scale(1.1);
+    transition: transform 0.2s ease;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .sidebar-title {
+        font-size: 0.7rem;
+        padding: 0.75rem 0.5rem 0.25rem;
+    }
+}

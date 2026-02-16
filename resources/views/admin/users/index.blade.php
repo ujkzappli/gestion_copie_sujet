@@ -311,7 +311,7 @@ $(document).ready(function() {
     
     // ================= DataTable =================
     const table = $('#usersTable').DataTable({
-        responsive: true,
+        responsive: false,
         pageLength: 25,
         order: [[0, 'asc']],
         language: {

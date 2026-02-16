@@ -9,7 +9,6 @@
             <span class="logo-text">Gestion Copies</span>
         </a>
 
-
         <!-- MENU COMMUN -->
         <ul class="menu-list flex-grow-1 mt-3">
             <li>
@@ -38,6 +37,9 @@
             @elseif($user->isDA())
                 @include('partials.sidebars.da')
             @endif
+
+            <li class="sidebar-title">Mon Compte</li>
+            
             <li>
                 <a class="m-link {{ request()->routeIs('profile') ? 'active' : '' }}"
                    href="{{ route('profile') }}">
@@ -46,8 +48,6 @@
                 </a>
             </li>
         </ul>
-
-        
 
         <!-- BOUTON REDUCTION -->
         <button type="button" class="btn btn-link sidebar-mini-btn text-light">
