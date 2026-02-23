@@ -194,7 +194,7 @@
                         <h3 class="mb-0 fw-bold text-primary">{{ $stats['disponible'] }}</h3>
                     </div>
                     <div class="bg-primary bg-opacity-10 rounded-circle p-3">
-                        <i class="bi bi-inbox-fill text-primary fs-2"></i>
+                       <i class="bi bi-pencil-fill fs-2" style="color: #f57c00;"></i>
                     </div>
                 </div>
             </div>

@@ -25,7 +25,7 @@ class NotificationController extends Controller
         }
 
         // Rediriger vers l’URL stockée dans la notification
-        return view('notifications.show', compact('notifications'));
+        return view('notifications.show', compact('notification'));
     }
 
 }
