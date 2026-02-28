@@ -76,7 +76,7 @@
                                         </div>
                                         <div class="flex-grow-1">
                                             <p class="mb-1 fw-semibold" style="font-size: 0.9rem;">
-                                                {{ $notif->data['title'] }}
+                                                {{ $notif->data['title'] ?? $notif->data['titre'] ?? 'Notification' }}
                                             </p>
                                             <small class="text-muted d-block" style="font-size: 0.8rem;">
                                                 {{ Str::limit($notif->data['message'], 60) }}

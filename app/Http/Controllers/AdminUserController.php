@@ -142,6 +142,40 @@ class AdminUserController extends Controller
         return view('admin.users.show', compact('user'));
     }
 
+    public function edit(User $user)
+    {
+        $etablissements = Etablissement::all();
+        $departements = Departement::all();
+
+        return view('admin.users.edit', compact('user', 'etablissements', 'departements'));
+    }
+
+    public function update(Request $request, User $user)
+    {
+        $request->validate([
+            'nom_utilisateur' => 'required|string|max:255',
+            'prenom_utilisateur' => 'required|string|max:255',
+            'email' => 'required|email|unique:users,email,' . $user->id,
+            'matricule_utilisateur' => 'required|unique:users,matricule_utilisateur,' . $user->id,
+            'type' => 'required|in:Admin,President,Enseignant,CD,CS,DA',
+            'etablissement_id' => 'nullable|required_if:type,DA,CS,CD',
+            'departement_id' => 'nullable|required_if:type,CD,Enseignant',
+        ]);
+
+        $user->update([
+            'nom_utilisateur'       => $request->nom_utilisateur,
+            'prenom_utilisateur'    => $request->prenom_utilisateur,
+            'email'                 => $request->email,
+            'matricule_utilisateur' => $request->matricule_utilisateur,
+            'type'                  => $request->type,
+            'etablissement_id'      => $request->etablissement_id,
+            'departement_id'        => $request->departement_id,
+        ]);
+
+        return redirect()->route('admin.users.index')
+            ->with('success', 'Utilisateur modifié avec succès.');
+    }
+
     public function destroy($id)
     {
         $user = User::findOrFail($id);

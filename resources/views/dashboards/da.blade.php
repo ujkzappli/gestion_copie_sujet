@@ -62,7 +62,7 @@
         <div class="d-flex justify-content-between align-items-center">
             <div>
                 <h3 class="mb-1 fw-bold">
-                    <i class="bi bi-graph-up-arrow me-2"></i>Dashboard Directeur Académique
+                    <i class="bi bi-graph-up-arrow me-2"></i>Dashboard Directeur Adjoint
                 </h3>
                 <small class="opacity-75">Vue d'ensemble de tous les départements de votre établissement</small>
             </div>

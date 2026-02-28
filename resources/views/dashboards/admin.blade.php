@@ -259,7 +259,7 @@
         </form>
     </div>
 
-    {{-- ================= Graphiques ================= --}}
+    {{-- ================= Graphiques (UNE SEULE FOIS) ================= --}}
     <div class="row g-3 mb-4">
         
         {{-- Répartition par statut --}}
@@ -273,31 +273,6 @@
             </div>
         </div>
 
-        {{-- Top enseignants --}}
-        <div class="col-lg-8">
-            <div class="chart-card">
-                <div class="section-title">
-                    <i class="bi bi-bar-chart-fill"></i>
-                    <h6 class="mb-0 fw-bold">Top 10 enseignants (nombre de copies)</h6>
-                </div>
-                <div id="enseignantBarChart"></div>
-            </div>
-        </div>
-    </div>
-
-    <div class="row g-3 mb-4">
-        
-        {{-- Évolution par année --}}
-        <div class="col-lg-8">
-            <div class="chart-card">
-                <div class="section-title">
-                    <i class="bi bi-graph-up"></i>
-                    <h6 class="mb-0 fw-bold">Évolution par année académique</h6>
-                </div>
-                <div id="anneeLineChart"></div>
-            </div>
-        </div>
-
         {{-- Taux de complétion --}}
         <div class="col-lg-4">
             <div class="chart-card">
@@ -308,18 +283,29 @@
                 <div id="completionRadialChart"></div>
             </div>
         </div>
-    </div>
 
-    <div class="row g-3 mb-4">
-        
-        {{-- Par département --}}
-        <div class="col-lg-6">
+        {{-- Copies par département --}}
+        <div class="col-lg-4">
             <div class="chart-card">
                 <div class="section-title">
                     <i class="bi bi-diagram-3-fill"></i>
                     <h6 class="mb-0 fw-bold">Copies par département</h6>
                 </div>
                 <div id="departementBarChart"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-3 mb-4">
+        
+        {{-- Top enseignants --}}
+        <div class="col-lg-6">
+            <div class="chart-card">
+                <div class="section-title">
+                    <i class="bi bi-bar-chart-fill"></i>
+                    <h6 class="mb-0 fw-bold">Top 10 enseignants (nombre de copies)</h6>
+                </div>
+                <div id="enseignantBarChart"></div>
             </div>
         </div>
 
@@ -484,49 +470,61 @@ $(document).ready(function() {
         departementSelect.val('');
     });
 
-    // ================= Graphiques =================
+    // ================= Graphiques avec chiffres =================
     const stats = @json($stats ?? []);
     const enseignantsStats = @json($enseignantsStats ?? []);
     const departementsStats = @json($departementsStats ?? []);
     const anneesStats = @json($anneesStats ?? []);
     const monthlyStats = @json($monthlyStats ?? []);
 
-    // 1. Donut - Statut
+    // 1. Donut - Statut (AVEC CHIFFRES)
     new ApexCharts(document.querySelector("#statutDonutChart"), {
         chart: { type: 'donut', height: 300 },
         series: [stats.en_cours || 0, stats.valide || 0, stats.retard || 0],
         labels: ['En cours', 'Terminés', 'En retard'],
         colors: ['#FFC107', '#28A745', '#DC3545'],
         legend: { position: 'bottom' },
-        plotOptions: { pie: { donut: { size: '65%' } } }
+        plotOptions: { 
+            pie: { 
+                donut: { 
+                    size: '65%',
+                    labels: {
+                        show: true,
+                        total: {
+                            show: true,
+                            label: 'Total',
+                            formatter: () => (stats.en_cours + stats.valide + stats.retard)
+                        }
+                    }
+                } 
+            } 
+        },
+        dataLabels: {
+            enabled: true,
+            formatter: function (val, opts) {
+                return opts.w.config.series[opts.seriesIndex]
+            }
+        }
     }).render();
 
-    // 2. Bar - Enseignants
+    // 2. Bar - Enseignants (AVEC CHIFFRES)
     const ensLabels = enseignantsStats.slice(0, 10).map(e => e.nom || 'N/A');
     const ensCopies = enseignantsStats.slice(0, 10).map(e => parseInt(e.total_copies) || 0);
     
     new ApexCharts(document.querySelector("#enseignantBarChart"), {
-        chart: { type: 'bar', height: 320 },
+        chart: { type: 'bar', height: 350 },
         series: [{ name: 'Copies', data: ensCopies }],
-        xaxis: { categories: ensLabels, labels: { rotate: -45, style: { fontSize: '11px' } } },
+        xaxis: { categories: ensLabels, labels: { rotate: -45, style: { fontSize: '10px' } } },
         colors: ['#667eea'],
-        plotOptions: { bar: { borderRadius: 6 } },
-        dataLabels: { enabled: true }
+        plotOptions: { bar: { borderRadius: 6, dataLabels: { position: 'top' } } },
+        dataLabels: { 
+            enabled: true,
+            offsetY: -20,
+            style: { fontSize: '12px', colors: ["#304758"] }
+        }
     }).render();
 
-    // 3. Line - Années
-    const anneeLabels = anneesStats.map(a => a.annee || 'N/A');
-    const anneeTotals = anneesStats.map(a => parseInt(a.total) || 0);
-    
-    new ApexCharts(document.querySelector("#anneeLineChart"), {
-        chart: { type: 'line', height: 320 },
-        series: [{ name: 'Lots', data: anneeTotals }],
-        xaxis: { categories: anneeLabels },
-        stroke: { curve: 'smooth', width: 3 },
-        colors: ['#17A2B8']
-    }).render();
-
-    // 4. Radial - Complétion
+    // 3. Radial - Complétion (AVEC POURCENTAGE)
     const completionRate = Math.round(((stats.valide || 0) / (stats.total || 1)) * 100);
     
     new ApexCharts(document.querySelector("#completionRadialChart"), {
@@ -536,34 +534,51 @@ $(document).ready(function() {
         labels: ['Complété'],
         plotOptions: {
             radialBar: {
+                hollow: { size: '65%' },
                 dataLabels: {
-                    value: { fontSize: '30px', formatter: val => val + '%' }
+                    name: { fontSize: '16px' },
+                    value: { 
+                        fontSize: '30px', 
+                        fontWeight: 'bold',
+                        formatter: val => val + '%' 
+                    }
                 }
             }
         }
     }).render();
 
-    // 5. Bar - Départements
+    // 4. Bar - Départements (AVEC CHIFFRES)
     const deptLabels = departementsStats.map(d => d.nom || 'N/A');
     const deptCopies = departementsStats.map(d => parseInt(d.total_copies) || 0);
     
     new ApexCharts(document.querySelector("#departementBarChart"), {
         chart: { type: 'bar', height: 300 },
         series: [{ name: 'Copies', data: deptCopies }],
-        xaxis: { categories: deptLabels, labels: { rotate: -45 } },
-        colors: ['#764ba2']
+        xaxis: { categories: deptLabels, labels: { rotate: -45, style: { fontSize: '10px' } } },
+        colors: ['#764ba2'],
+        plotOptions: { bar: { borderRadius: 6, dataLabels: { position: 'top' } } },
+        dataLabels: { 
+            enabled: true,
+            offsetY: -20,
+            style: { fontSize: '12px', colors: ["#304758"] }
+        }
     }).render();
 
-    // 6. Area - Mensuel
+    // 5. Area - Mensuel (AVEC CHIFFRES)
     const monthLabels = monthlyStats.map(m => m.mois || 'N/A');
     const monthTotals = monthlyStats.map(m => parseInt(m.total) || 0);
     
     new ApexCharts(document.querySelector("#monthlyLineChart"), {
-        chart: { type: 'area', height: 300 },
+        chart: { type: 'area', height: 350 },
         series: [{ name: 'Lots', data: monthTotals }],
         xaxis: { categories: monthLabels },
         colors: ['#667eea'],
-        fill: { type: 'gradient' }
+        fill: { type: 'gradient' },
+        stroke: { curve: 'smooth', width: 2 },
+        dataLabels: { 
+            enabled: true,
+            style: { fontSize: '11px', colors: ["#304758"] }
+        }
     }).render();
 
 });

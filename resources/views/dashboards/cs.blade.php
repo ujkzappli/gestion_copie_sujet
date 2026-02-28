@@ -62,7 +62,7 @@
         <div class="d-flex justify-content-between align-items-center">
             <div>
                 <h3 class="mb-1 fw-bold">
-                    <i class="bi bi-speedometer2 me-2"></i>Dashboard Chef de Service
+                    <i class="bi bi-speedometer2 me-2"></i>Dashboard Chef de Scolarité
                 </h3>
                 <small class="opacity-75">Supervision de tous les départements de l'établissement</small>
             </div>

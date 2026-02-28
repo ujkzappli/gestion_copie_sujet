@@ -224,8 +224,8 @@
                                     class="form-select form-select-modern @error('type') is-invalid @enderror"
                                     onchange="handleTypeChange()" required>
                                 <option value="" selected disabled>-- Sélectionner un type --</option>
-                                <option value="DA" @selected(old('type')=='DA')>DA - Directeur des Affaires</option>
-                                <option value="CS" @selected(old('type')=='CS')>CS - Chef de Service</option>
+                                <option value="DA" @selected(old('type')=='DA')>DA - Directeur Adjoint</option>
+                                <option value="CS" @selected(old('type')=='CS')>CS - Chef de Scolarité</option>
                                 <option value="CD" @selected(old('type')=='CD')>CD - Chef de Département</option>
                                 <option value="Enseignant" @selected(old('type')=='Enseignant')>Enseignant</option>
                                 <option value="President" @selected(old('type')=='President')>Président</option>
